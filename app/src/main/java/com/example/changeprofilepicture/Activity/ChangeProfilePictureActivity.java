@@ -12,6 +12,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,47 +27,58 @@ import com.example.changeprofilepicture.Utils.CameraPermissions;
 import com.example.changeprofilepicture.Utils.ChangeProfileImage;
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 public class ChangeProfilePictureActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final String TAG="ChangeProfilePictcure";
-    private CircularImageView profileImage;
-    private ImageView getProflieImage;
     public static final int CAMERA_PERMISSION = 111;
     public static final int GALLERY_PERMISSION = 112;
-    private final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Profile/";
+    private static final String TAG = "ChangeProfilePictcure";
     public static int count = 0;
+    private final String dir = Environment.getExternalStorageDirectory() + "/Profile/";
     Bitmap bitmap = null;
-ProfilePictureTable profilePictureTable;
+    ProfilePictureTable profilePictureTable;
     ProfilePicture profilePicture;
+    private CircularImageView profileImage;
+    private ImageView getProflieImage;
+
+
+
     private void init() {
         File file = new File(dir);
         if (!file.exists()) {
             file.mkdir();
         }
-        profilePictureTable=new ProfilePictureTable(this);
-        profilePicture=new ProfilePicture();
-        profileImage = (CircularImageView)findViewById( R.id.profile_imageview );
-        getProflieImage = (ImageView) findViewById( R.id.get_proflie_imageview);
-        List<ProfilePicture>profilePictures=profilePictureTable.getAllProfilePicture();
+        profilePictureTable = new ProfilePictureTable(this);
+        profilePicture = new ProfilePicture();
+        profileImage = (CircularImageView) findViewById(R.id.profile_imageview);
+        getProflieImage = (ImageView) findViewById(R.id.get_proflie_imageview);
+        List<ProfilePicture> profilePictures = profilePictureTable.getAllProfilePicture();
         if (profilePictures.size() > 0) {
             profilePicture = profilePictures.get(0);
             ChangeProfileImage.getInstance().setProfilePicture(profilePicture);
         }
-        if(profilePicture.getImage()!=null){
-            Picasso.Builder picassoBuilder = new Picasso.Builder(this);
-            Picasso picasso = picassoBuilder.build();
-            Log.d(TAG,profilePicture.getImage());
-            picasso.load(profilePicture.getImage()).error(R.drawable.ic_camera_48dp).into(profileImage);
-        }
-        else {
+        if (profilePicture.getImage() != null) {
+            try {
+
+                Bitmap myBitmapAgain = base64ToBitmap(profilePicture.getImage());
+
+                Log.d("decode", "Iamge" + profilePicture.getImage());
+
+                profileImage.setImageBitmap(myBitmapAgain);
+
+            } catch (Exception e) {
+                profileImage.setImageResource(R.drawable.empty_profile_image);
+                e.printStackTrace();
+
+            }
+        } else {
             profileImage.setImageResource(R.drawable.empty_profile_image);
         }
         getProflieImage.setOnClickListener(this);
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +90,7 @@ ProfilePictureTable profilePictureTable;
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.get_proflie_imageview:
                 getProfileImage();
                 break;
@@ -87,7 +99,8 @@ ProfilePictureTable profilePictureTable;
         }
 
     }
-    public void getProfileImage(){
+
+    public void getProfileImage() {
         final android.app.AlertDialog.Builder alertDialogBuilder = new android.app.AlertDialog.Builder(this);
         LayoutInflater inflater = LayoutInflater.from(this);
         final View dialogView = inflater.inflate(R.layout.gallery_alert_dailog, null);
@@ -99,7 +112,7 @@ ProfilePictureTable profilePictureTable;
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               getProfileImageFromCamera();
+                getProfileImageFromCamera();
                 alert.dismiss();
 
             }
@@ -116,14 +129,15 @@ ProfilePictureTable profilePictureTable;
 
 
     }
-    public void getProfileImageFromCamera(){
+
+    public void getProfileImageFromCamera() {
         CameraPermissions permissions = new CameraPermissions(this);
-        if(!permissions.checkPermissionForCamera()){
+        if (!permissions.checkPermissionForCamera()) {
             permissions.requestPermissionForCamera();
-        }else{
-            if(!permissions.checkPermissionForExternalStorage()){
+        } else {
+            if (!permissions.checkPermissionForExternalStorage()) {
                 permissions.requestPermissionForExternalStorage();
-            }else{
+            } else {
                 count++;
                 File file = new File(dir + count + ".jpg");
                 try {
@@ -139,7 +153,8 @@ ProfilePictureTable profilePictureTable;
             }
         }
     }
-    public void getProfileImageFromGallery(){
+
+    public void getProfileImageFromGallery() {
         CameraPermissions permissions = new CameraPermissions(this);
         if (!permissions.checkPermissionForExternalRead()) {
             permissions.requestPermissionForExternalRead();
@@ -153,8 +168,8 @@ ProfilePictureTable profilePictureTable;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if(requestCode == CameraPermissions.CAMERA_PERMISSION_REQUEST_CODE || requestCode == CameraPermissions.EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE){
-            if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+        if (requestCode == CameraPermissions.CAMERA_PERMISSION_REQUEST_CODE || requestCode == CameraPermissions.EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.checkSelfPermission(ChangeProfilePictureActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(ChangeProfilePictureActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     return;
@@ -169,23 +184,31 @@ ProfilePictureTable profilePictureTable;
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == CAMERA_PERMISSION) {
-            bitmap = BitmapFactory.decodeFile(dir + count + ".jpg");
-            profileImage.setImageBitmap(bitmap);
-            profilePicture.setImage(String.valueOf(bitmap));
-            profilePictureTable.create(profilePicture);
-            Log.d(TAG,"Profile Image Changed from camera");
+            try {
+                bitmap = BitmapFactory.decodeFile(dir + count + ".jpg");
+                profileImage.setImageBitmap(bitmap);
+                String myBase64Image = bitmapToBase64(bitmap);
+                profilePicture.setImage(resizeBase64Image(myBase64Image));
+                profilePictureTable.create(profilePicture);
+                Log.d(TAG, "Profile Image Changed from camera");
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d(TAG, "Failed to update Image");
+            }
         }
         if (resultCode == RESULT_OK && requestCode == GALLERY_PERMISSION) {
             Uri selectedImageUri = data.getData();
             String imagepath = getPath(selectedImageUri);
             bitmap = BitmapFactory.decodeFile(imagepath);
             profileImage.setImageBitmap(bitmap);
-            profilePicture.setImage(imagepath);
+            String myBase64Image = bitmapToBase64(bitmap);
+            profilePicture.setImage(resizeBase64Image(myBase64Image));
             profilePictureTable.create(profilePicture);
-            Log.d(TAG,"Profile Image Changed from gallery"+imagepath);
+            Log.d(TAG, "Profile Image Changed from gallery" + imagepath);
         }
 
     }
+
     public String getPath(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};
         Cursor cursor = this.managedQuery(uri, projection, null, null, null);
@@ -194,26 +217,69 @@ ProfilePictureTable profilePictureTable;
         return cursor.getString(column_index);
     }
 
+    private String bitmapToBase64(Bitmap bitmap) {
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+
+    }
+
+    public static Bitmap base64ToBitmap(String b64) {
+        byte[] imageAsBytes = Base64.decode(b64.getBytes(), Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+    }
+
+    public String resizeBase64Image(String base64image) {
+        byte[] encodeByte = Base64.decode(base64image.getBytes(), Base64.DEFAULT);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPurgeable = true;
+        Bitmap image = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length, options);
+
+
+        if (image.getHeight() <= 400 && image.getWidth() <= 400) {
+            return base64image;
+        }
+        image = Bitmap.createScaledBitmap(image, 100, 100, false);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.PNG, 100, baos);
+
+        byte[] b = baos.toByteArray();
+        System.gc();
+        return Base64.encodeToString(b, Base64.NO_WRAP);
+
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
     }
+
     @Override
     protected void onResume() {
         super.onResume();
     }
+
     @Override
     protected void onPause() {
         super.onPause();
     }
+
     @Override
     protected void onStop() {
         super.onStop();
     }
+
     @Override
     protected void onRestart() {
         super.onRestart();
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
