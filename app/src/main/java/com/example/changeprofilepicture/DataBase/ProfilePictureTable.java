@@ -58,8 +58,10 @@ public class ProfilePictureTable extends DatabaseHandler {
         try {
             db.insert(TABLE, null, values);
             createSuccessful = true;
+            Log.d(TAG, " PROFILE IMAGE CREATED ");
         } catch (Exception e) {
             createSuccessful = false;
+            Log.d(TAG, " FAILED TO CREATE PROFILE IMAGE "+e);
         }
         db.close();
 
@@ -72,15 +74,16 @@ public class ProfilePictureTable extends DatabaseHandler {
         ContentValues values = new ContentValues();
         values.put(KEY_ID, profilePicture.getId());
         values.put(KEY_IMAGE, profilePicture.getImage());
+        String where = KEY_ID + " = ?";
+
+        String[] whereArgs = {String.valueOf(profilePicture.getId())};
         try {
+            updateSuccessful = db.update(TABLE, values, where, whereArgs) > 0;
             db.insert(TABLE, null, values);
-            /**
-             * @TODO
-             * Update table
-             */
-            updateSuccessful = true;
+            Log.d(TAG, " PROFILE IMAGE UPDATED ");
         } catch (Exception e) {
             updateSuccessful = false;
+            Log.d(TAG, " FAILED TO UPDATE PROFILE IMAGE" + e);
         }
         db.close();
 
@@ -92,8 +95,9 @@ public class ProfilePictureTable extends DatabaseHandler {
             SQLiteDatabase db = this.getWritableDatabase();
             deleteSuccessful = db.delete(TABLE, KEY_ID + " ='" + profilePicture_id + "'", null) > 0;
             db.close();
+            Log.d(TAG, " PROFILE IMAGE DELETED ");
         } catch (Exception e) {
-            Log.d("DATABASE ", " PROFILE IMAGE DELETED " + e);
+            Log.d(TAG, " FAILED TO DELETE PROFILE IMAGE " + e);
         }
         return deleteSuccessful;
     }
@@ -114,8 +118,9 @@ public class ProfilePictureTable extends DatabaseHandler {
 
             cursor.close();
             db.close();
+            Log.d(TAG, " PROFILE IMAGE READ ");
         } catch (Exception e) {
-            Log.d("DATABASE ", " PROFILE IMAGE READ " + e);
+            Log.d(TAG, " FAILED TO READ PROFILE IMAGE" + e);
         }
         return profilePicture;
     }
@@ -144,8 +149,9 @@ public class ProfilePictureTable extends DatabaseHandler {
 
             cursor.close();
             db.close();
+            Log.d(TAG, "PROFILE PICTURES READ " );
         } catch (Exception e) {
-            Log.d("DATABASE ", "PROFILE PICTURES READ " + e);
+            Log.d(TAG, "FAILED TO READ PROFILE PICTURES" + e);
         }
         return profilePictures;
     }

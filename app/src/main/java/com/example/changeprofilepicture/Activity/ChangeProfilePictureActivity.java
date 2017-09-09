@@ -45,7 +45,6 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
     private ImageView getProflieImage;
 
 
-
     private void init() {
         File file = new File(dir);
         if (!file.exists()) {
@@ -62,11 +61,8 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
         }
         if (profilePicture.getImage() != null) {
             try {
-
+                Log.d("decode", "Iamge: " + profilePicture.getImage());
                 Bitmap myBitmapAgain = base64ToBitmap(profilePicture.getImage());
-
-                Log.d("decode", "Iamge" + profilePicture.getImage());
-
                 profileImage.setImageBitmap(myBitmapAgain);
 
             } catch (Exception e) {
@@ -75,7 +71,10 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
 
             }
         } else {
+            profilePicture.setId(101);
             profileImage.setImageResource(R.drawable.empty_profile_image);
+            profilePicture.setImage(" ");
+            profilePictureTable.create(profilePicture);
         }
         getProflieImage.setOnClickListener(this);
     }
@@ -189,7 +188,7 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
                 profileImage.setImageBitmap(bitmap);
                 String myBase64Image = bitmapToBase64(bitmap);
                 profilePicture.setImage(resizeBase64Image(myBase64Image));
-                profilePictureTable.create(profilePicture);
+                profilePictureTable.update(profilePicture);
                 Log.d(TAG, "Profile Image Changed from camera");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -197,14 +196,19 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
             }
         }
         if (resultCode == RESULT_OK && requestCode == GALLERY_PERMISSION) {
-            Uri selectedImageUri = data.getData();
-            String imagepath = getPath(selectedImageUri);
-            bitmap = BitmapFactory.decodeFile(imagepath);
-            profileImage.setImageBitmap(bitmap);
-            String myBase64Image = bitmapToBase64(bitmap);
-            profilePicture.setImage(resizeBase64Image(myBase64Image));
-            profilePictureTable.create(profilePicture);
-            Log.d(TAG, "Profile Image Changed from gallery" + imagepath);
+            try {
+                Uri selectedImageUri = data.getData();
+                String imagepath = getPath(selectedImageUri);
+                bitmap = BitmapFactory.decodeFile(imagepath);
+                profileImage.setImageBitmap(bitmap);
+                String myBase64Image = bitmapToBase64(bitmap);
+                profilePicture.setImage(resizeBase64Image(myBase64Image));
+                profilePictureTable.update(profilePicture);
+                Log.d(TAG, "Profile Image Changed from gallery" + imagepath);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d(TAG, "Failed to update Image");
+            }
         }
 
     }
@@ -229,9 +233,10 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
 
     }
 
-    public static Bitmap base64ToBitmap(String b64) {
-        byte[] imageAsBytes = Base64.decode(b64.getBytes(), Base64.DEFAULT);
-        return BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+    public static Bitmap base64ToBitmap(String input)
+    {
+        byte[] decodedBytes = Base64.decode(input, 0);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
 
     public String resizeBase64Image(String base64image) {
@@ -255,34 +260,4 @@ public class ChangeProfilePictureActivity extends AppCompatActivity implements V
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-    }
 }
