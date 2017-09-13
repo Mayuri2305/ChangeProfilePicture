@@ -6,10 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.changeprofilepicture.Data.ProfilePicture;
 
-
-/**
- * Created by kishoregekkula on 15/02/16.
- */
 public class DatabaseHandler extends SQLiteOpenHelper {
     private static DatabaseHandler sInstance;
     private static final int DATABASE_VERSION = 1;

@@ -15,9 +15,6 @@ import java.util.List;
 import static android.R.attr.key;
 import static android.R.attr.value;
 
-/**
- * Created by mayuri on 26/8/17.
- */
 
 
 public class ProfilePictureTable extends DatabaseHandler {

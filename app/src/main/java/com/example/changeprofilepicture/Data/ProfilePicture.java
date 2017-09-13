@@ -1,8 +1,5 @@
 package com.example.changeprofilepicture.Data;
 
-/**
- * Created by mayuri on 26/8/17.
- */
 
 public class ProfilePicture {
     private int id;

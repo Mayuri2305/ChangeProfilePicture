@@ -9,9 +9,6 @@ import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 
-/**
- * Created by kishoregekkula on 08/08/17.
- */
 public class CameraPermissions {
 
     public static final int EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 1;
